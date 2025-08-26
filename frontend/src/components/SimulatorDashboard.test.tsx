@@ -301,24 +301,24 @@ describe('SimulatorDashboard Controls Tests', () => {
     jest.clearAllMocks();
     
     // Set up default API mock responses
-    mockedSimulatorAPI.getSimulationStatus.mockResolvedValue(mockSimulationStatus);
-    mockedSimulatorAPI.getQueueStats.mockResolvedValue(mockQueueStats);
-    mockedSimulatorAPI.getWorkerStats.mockResolvedValue(mockWorkerStats);
+    mockAPI.getSimulationStatus.mockResolvedValue(mockSimulationStatus);
+    mockAPI.getQueueStats.mockResolvedValue(mockQueueStats);
+    mockAPI.getWorkerStats.mockResolvedValue(mockWorkerStats);
     
     // Set up successful responses for control actions
-    mockedSimulatorAPI.startSimulation.mockResolvedValue({ ...mockSimulationStatus, running: true });
-    mockedSimulatorAPI.stopSimulation.mockResolvedValue({ message: 'Simulation stopped' });
-    mockedSimulatorAPI.resetSimulation.mockResolvedValue({ message: 'Simulation reset' });
-    mockedSimulatorAPI.pauseSimulation.mockResolvedValue({ message: 'Simulation paused' });
-    mockedSimulatorAPI.resumeSimulation.mockResolvedValue({ message: 'Simulation resumed' });
-    mockedSimulatorAPI.stepSimulation.mockResolvedValue({
+    mockAPI.startSimulation.mockResolvedValue({ ...mockSimulationStatus, running: true });
+    mockAPI.stopSimulation.mockResolvedValue({ message: 'Simulation stopped' });
+    mockAPI.resetSimulation.mockResolvedValue({ message: 'Simulation reset' });
+    mockAPI.pauseSimulation.mockResolvedValue({ message: 'Simulation paused' });
+    mockAPI.resumeSimulation.mockResolvedValue({ message: 'Simulation resumed' });
+    mockAPI.stepSimulation.mockResolvedValue({
       simulation_time: 1.0,
       jobs_assigned: 1,
       jobs_completed: 0,
       queue_length: 5,
       active_workers: 1,
     });
-    mockedSimulatorAPI.stepSimulationTime.mockResolvedValue({
+    mockAPI.stepSimulationTime.mockResolvedValue({
       simulation_time: 10.0,
       time_advanced: 5.0,
       steps_executed: 5,
