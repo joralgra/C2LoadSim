@@ -1,0 +1,62 @@
+[
+  {
+    "timestamp": "2025-08-26T13:08:04.283499",
+    "simulation_time": 1.0999999999999999,
+    "total_jobs_created": 1,
+    "queue_stats": {
+      "queue_length": 0,
+      "max_queue_size": 1000,
+      "queue_utilization": 0.0,
+      "completed_jobs": 1,
+      "failed_jobs": 0,
+      "total_jobs_processed": 1,
+      "success_rate": 1.0,
+      "use_priority_queue": false
+    },
+    "worker_stats": {
+      "total_workers": 2,
+      "active_workers": 0,
+      "average_utilization": 0.0,
+      "individual_utilizations": [
+        0.0,
+        0.0
+      ]
+    },
+    "performance_metrics": {
+      "throughput": 0.9082652134423254,
+      "total_completed": 1,
+      "total_failed": 0,
+      "success_rate": 1.0
+    }
+  },
+  {
+    "timestamp": "2025-08-26T13:08:04.283641",
+    "simulation_time": 2.0000000000000004,
+    "total_jobs_created": 1,
+    "queue_stats": {
+      "queue_length": 0,
+      "max_queue_size": 1000,
+      "queue_utilization": 0.0,
+      "completed_jobs": 1,
+      "failed_jobs": 0,
+      "total_jobs_processed": 1,
+      "success_rate": 1.0,
+      "use_priority_queue": false
+    },
+    "worker_stats": {
+      "total_workers": 2,
+      "active_workers": 0,
+      "average_utilization": 0.0,
+      "individual_utilizations": [
+        0.0,
+        0.0
+      ]
+    },
+    "performance_metrics": {
+      "throughput": 0.4997501249375311,
+      "total_completed": 1,
+      "total_failed": 0,
+      "success_rate": 1.0
+    }
+  }
+]

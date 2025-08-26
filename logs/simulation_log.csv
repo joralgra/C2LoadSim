@@ -1,0 +1,2 @@
+timestamp,simulation_time,total_jobs_created,jobs_in_queue,jobs_completed,jobs_failed,total_workers,active_workers,average_queue_length,average_worker_utilization,throughput
+2025-08-26T13:08:04.829839,1.0999999999999999,1,0,0,0,2,1,0,0.5,0.0

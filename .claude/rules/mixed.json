@@ -1,0 +1,56 @@
+{
+  "scenarioName": "Mixed",
+  "duration": 14400,
+  "seed": 45,
+  "arrival": {
+    "type": "nhpp",
+    "lambdaFunction": "3 + 2*cos(t/1800)"
+  },
+  "jobSize": {
+    "type": "mixture",
+    "components": [
+      {
+        "weight": 0.4,
+        "type": "gamma",
+        "parameters": {
+          "k": 8,
+          "theta": 4
+        }
+      },
+      {
+        "weight": 0.4,
+        "type": "normal",
+        "parameters": {
+          "mu": 5,
+          "sigma": 1
+        }
+      },
+      {
+        "weight": 0.2,
+        "type": "lognormal",
+        "parameters": {
+          "mu": 2,
+          "sigma": 1
+        }
+      }
+    ]
+  },
+  "workers": {
+    "count": 8,
+    "speedDistribution": {
+      "type": "gamma",
+      "k": 2,
+      "theta": 0.5
+    },
+    "cpuUsage": {
+      "type": "normal",
+      "mu": 0.5,
+      "sigma": 0.2
+    },
+    "memoryUsage": {
+      "type": "normal",
+      "mu": 256,
+      "sigma": 64
+    }
+  }
+}

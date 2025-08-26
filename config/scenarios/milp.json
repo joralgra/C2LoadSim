@@ -1,0 +1,34 @@
+{
+  "scenarioName": "MILP",
+  "duration": 7200,
+  "seed": 42,
+  "arrival": {
+    "type": "poisson",
+    "lambda": 2
+  },
+  "jobSize": {
+    "type": "gamma",
+    "parameters": {
+      "k": 10,
+      "theta": 5
+    }
+  },
+  "workers": {
+    "count": 3,
+    "speedDistribution": {
+      "type": "normal",
+      "mu": 0.2,
+      "sigma": 0.05
+    },
+    "cpuUsage": {
+      "type": "normal",
+      "mu": 0.75,
+      "sigma": 0.05
+    },
+    "memoryUsage": {
+      "type": "normal",
+      "mu": 1024,
+      "sigma": 256
+    }
+  }
+}

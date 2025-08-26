@@ -1,0 +1,1 @@
+timestamp,worker_id,status,processing_speed,failure_rate,current_jobs,completed_jobs,failed_jobs,utilization,success_rate,average_processing_time

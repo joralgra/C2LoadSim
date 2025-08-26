@@ -1,0 +1,212 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Simulation Scenario Schema",
+  "description": "JSON Schema for C2LoadSim simulation scenarios",
+  "type": "object",
+  "required": ["scenarioName", "duration", "seed", "arrival", "jobSize", "workers"],
+  "properties": {
+    "scenarioName": {
+      "type": "string",
+      "description": "Unique name for the simulation scenario"
+    },
+    "duration": {
+      "type": "number",
+      "minimum": 1,
+      "description": "Simulation duration in seconds"
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Random seed for reproducibility"
+    },
+    "arrival": {
+      "type": "object",
+      "description": "Job arrival pattern configuration",
+      "oneOf": [
+        {
+          "properties": {
+            "type": {"const": "poisson"},
+            "lambda": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Average arrival rate (jobs per second)"
+            }
+          },
+          "required": ["type", "lambda"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "type": {"const": "nhpp"},
+            "lambdaFunction": {
+              "type": "string",
+              "description": "Mathematical expression for time-dependent arrival rate λ(t)"
+            }
+          },
+          "required": ["type", "lambdaFunction"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "jobSize": {
+      "type": "object",
+      "description": "Job size distribution configuration",
+      "oneOf": [
+        {
+          "properties": {
+            "type": {"const": "normal"},
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "mu": {"type": "number", "description": "Mean"},
+                "sigma": {"type": "number", "minimum": 0, "description": "Standard deviation"}
+              },
+              "required": ["mu", "sigma"],
+              "additionalProperties": false
+            }
+          },
+          "required": ["type", "parameters"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "type": {"const": "lognormal"},
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "mu": {"type": "number", "description": "Mean of underlying normal distribution"},
+                "sigma": {"type": "number", "minimum": 0, "description": "Standard deviation of underlying normal distribution"}
+              },
+              "required": ["mu", "sigma"],
+              "additionalProperties": false
+            }
+          },
+          "required": ["type", "parameters"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "type": {"const": "gamma"},
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "k": {"type": "number", "minimum": 0, "description": "Shape parameter"},
+                "theta": {"type": "number", "minimum": 0, "description": "Scale parameter"}
+              },
+              "required": ["k", "theta"],
+              "additionalProperties": false
+            }
+          },
+          "required": ["type", "parameters"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "type": {"const": "mixture"},
+            "components": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "weight": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Weight of this component in the mixture"
+                  },
+                  "type": {"enum": ["normal", "lognormal", "gamma"]},
+                  "parameters": {
+                    "type": "object",
+                    "description": "Parameters specific to the distribution type"
+                  }
+                },
+                "required": ["weight", "type", "parameters"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": ["type", "components"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "workers": {
+      "type": "object",
+      "description": "Worker configuration",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of workers/pods"
+        },
+        "speedDistribution": {
+          "type": "object",
+          "description": "Worker processing speed distribution",
+          "oneOf": [
+            {
+              "properties": {
+                "type": {"const": "normal"},
+                "mu": {"type": "number", "description": "Mean processing speed"},
+                "sigma": {"type": "number", "minimum": 0, "description": "Standard deviation"}
+              },
+              "required": ["type", "mu", "sigma"],
+              "additionalProperties": false
+            },
+            {
+              "properties": {
+                "type": {"const": "gamma"},
+                "k": {"type": "number", "minimum": 0, "description": "Shape parameter"},
+                "theta": {"type": "number", "minimum": 0, "description": "Scale parameter"}
+              },
+              "required": ["type", "k", "theta"],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "cpuUsage": {
+          "type": "object",
+          "description": "CPU usage distribution",
+          "properties": {
+            "type": {"const": "normal"},
+            "mu": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Mean CPU utilization (0.0 to 1.0)"
+            },
+            "sigma": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Standard deviation of CPU utilization"
+            }
+          },
+          "required": ["type", "mu", "sigma"],
+          "additionalProperties": false
+        },
+        "memoryUsage": {
+          "type": "object",
+          "description": "Memory usage distribution",
+          "properties": {
+            "type": {"const": "normal"},
+            "mu": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Mean memory usage in MB"
+            },
+            "sigma": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Standard deviation of memory usage in MB"
+            }
+          },
+          "required": ["type", "mu", "sigma"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["count", "speedDistribution", "cpuUsage", "memoryUsage"],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
