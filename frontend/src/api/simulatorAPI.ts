@@ -78,6 +78,35 @@ class SimulatorAPI {
       (response) => response,
       (error) => {
         console.error('API Error:', error);
+        
+        // Handle specific 404 cases for simulation data endpoints
+        if (error.response?.status === 404 && 
+            (error.config?.url?.includes('/data/queue/stats') || 
+             error.config?.url?.includes('/data/workers/stats'))) {
+          // Return default empty data structure instead of throwing
+          const isQueueStats = error.config.url.includes('/data/queue/stats');
+          const defaultData = isQueueStats ? {
+            queue_length: 0,
+            max_queue_size: 0,
+            queue_utilization: 0,
+            completed_jobs: 0,
+            failed_jobs: 0,
+            total_jobs_processed: 0,
+            success_rate: 0,
+            use_priority_queue: false
+          } : {
+            workers: []
+          };
+          
+          return {
+            data: defaultData,
+            status: 200,
+            statusText: 'OK',
+            headers: error.config?.headers || {},
+            config: error.config
+          };
+        }
+        
         throw error;
       }
     );
@@ -97,6 +126,11 @@ class SimulatorAPI {
 
   async getSimulationStatus(): Promise<SimulationStatus> {
     const response: AxiosResponse = await this.axiosInstance.get('/simulation/status');
+    return response.data;
+  }
+
+  async getSimulationHistory(): Promise<{ data: any[]; source: string; count: number }> {
+    const response: AxiosResponse = await this.axiosInstance.get('/data/history');
     return response.data;
   }
 
@@ -146,13 +180,18 @@ class SimulatorAPI {
     return response.data;
   }
 
-  async listScenarios(): Promise<{ scenarios: Array<{ filename: string; name: string; description: string; duration: number }> }> {
+  async listScenarios(): Promise<{ scenarios: Array<{ filename: string; name: string; description: string; duration: number; workers: number; arrival_type: string }> }> {
     const response: AxiosResponse = await this.axiosInstance.get('/scenarios/list');
     return response.data;
   }
 
   async getScenario(filename: string): Promise<ScenarioConfig> {
     const response: AxiosResponse = await this.axiosInstance.get(`/scenarios/${filename}`);
+    return response.data;
+  }
+
+  async loadScenario(filename: string): Promise<{ message: string; scenario_name: string; duration: number; workers: number; arrival_type: string }> {
+    const response: AxiosResponse = await this.axiosInstance.post(`/scenarios/load/${filename}`);
     return response.data;
   }
 
@@ -177,13 +216,38 @@ class SimulatorAPI {
   }
 
   async getQueueStats(): Promise<QueueStats> {
-    const response: AxiosResponse = await this.axiosInstance.get('/data/queue/stats');
-    return response.data;
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get('/data/queue/stats');
+      return response.data;
+    } catch (error: any) {
+      // If simulation is not running, return default stats
+      if (error.response?.status === 404) {
+        return {
+          queue_length: 0,
+          max_queue_size: 0,
+          queue_utilization: 0,
+          completed_jobs: 0,
+          failed_jobs: 0,
+          total_jobs_processed: 0,
+          success_rate: 0,
+          use_priority_queue: false
+        };
+      }
+      throw error;
+    }
   }
 
   async getWorkerStats(): Promise<{ workers: WorkerStats[] }> {
-    const response: AxiosResponse = await this.axiosInstance.get('/data/workers/stats');
-    return response.data;
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get('/data/workers/stats');
+      return response.data;
+    } catch (error: any) {
+      // If simulation is not running, return empty workers array
+      if (error.response?.status === 404) {
+        return { workers: [] };
+      }
+      throw error;
+    }
   }
 
   // Utility methods

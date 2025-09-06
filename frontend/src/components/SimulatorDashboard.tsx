@@ -22,6 +22,7 @@ import {
   PlayArrow,
   Stop,
   Refresh,
+  Clear,
   Assessment,
   WorkOutline,
   Queue,
@@ -48,6 +49,9 @@ interface DashboardState {
   workerStats: WorkerStats[];
   loading: boolean;
   error: string | null;
+  scenarios: Array<{ filename: string; name: string; description: string; duration: number; workers: number; arrival_type: string }>;
+  selectedScenario: string | null;
+  scenarioLoaded: boolean;
 }
 
 interface StepControlState {
@@ -56,7 +60,7 @@ interface StepControlState {
 }
 
 const SimulatorDashboard: React.FC = () => {
-  const { isConnected: wsConnected, latestData, connectionError: wsError } = useWebSocket();
+  const { isConnected: wsConnected, latestData, connectionError: wsError, clearGraphData } = useWebSocket();
   
   const [state, setState] = useState<DashboardState>({
     simulationStatus: {
@@ -71,6 +75,9 @@ const SimulatorDashboard: React.FC = () => {
     workerStats: [],
     loading: false,
     error: null,
+    scenarios: [],
+    selectedScenario: null,
+    scenarioLoaded: false,
   });
 
   const [stepControl, setStepControl] = useState<StepControlState>({
@@ -79,6 +86,23 @@ const SimulatorDashboard: React.FC = () => {
   });
 
   const [lastUpdate, setLastUpdate] = useState<number | null>(null);
+
+  // Load scenarios on component mount
+  useEffect(() => {
+    const loadScenarios = async () => {
+      try {
+        const response = await simulatorAPI.listScenarios();
+        setState(prev => ({
+          ...prev,
+          scenarios: response.scenarios,
+        }));
+      } catch (error) {
+        console.error('Failed to load scenarios:', error);
+      }
+    };
+    
+    loadScenarios();
+  }, []);
 
   // Update state when WebSocket data arrives
   useEffect(() => {
@@ -139,47 +163,94 @@ const SimulatorDashboard: React.FC = () => {
     }
   }, [wsConnected]);
 
+  const handleScenarioChange = (filename: string) => {
+    setState(prev => ({
+      ...prev,
+      selectedScenario: filename,
+      scenarioLoaded: false,
+    }));
+  };
+
+  const handleLoadScenario = async () => {
+    if (!state.selectedScenario) return;
+    
+    setState(prev => ({ ...prev, loading: true }));
+    
+    try {
+      const response = await simulatorAPI.loadScenario(state.selectedScenario);
+      setState(prev => ({
+        ...prev,
+        scenarioLoaded: true,
+        error: null,
+      }));
+      
+      // Show success message
+      console.log('Scenario loaded:', response.message);
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Failed to load scenario',
+        scenarioLoaded: false,
+      }));
+    } finally {
+      setState(prev => ({ ...prev, loading: false }));
+    }
+  };
+
   const handleStartSimulation = async () => {
     setState(prev => ({ ...prev, loading: true }));
     
     try {
-      // Basic simulation configuration
-      const config = {
-        scenario: {
-          name: "Default Simulation",
-          description: "Basic workload simulation",
-          duration: 300, // 5 minutes
-          num_workers: 4,
-          worker_config: {
-            processing_speed: 1.0,
-            failure_rate: 0.01,
-            efficiency_variance: 0.1,
-            max_concurrent_jobs: 1,
-          },
-          job_generation: {
-            job_size: {
-              distribution: "lognormal",
-              params: { mean_log: 0.0, std_log: 0.5 }
+      // If a scenario is loaded, just start the simulation
+      // The scenario configuration is already loaded in the backend
+      if (state.scenarioLoaded) {
+        await simulatorAPI.startSimulation({
+          scenario: {
+            name: "Loaded Scenario",
+            description: "Using pre-loaded scenario configuration",
+            duration: 300,
+          }
+        });
+      } else {
+        // Fallback to default configuration if no scenario is loaded
+        const config = {
+          scenario: {
+            name: "Default High-Load Simulation",
+            description: "High-throughput workload simulation to keep workers busy",
+            duration: 300, // 5 minutes
+            num_workers: 4,
+            worker_config: {
+              processing_speed: 0.8,
+              failure_rate: 0.02,
+              efficiency_variance: 0.15,
+              max_concurrent_jobs: 2,
             },
-            job_duration: {
-              distribution: "gamma",
-              params: { alpha: 2.0, beta: 1.0 }
-            },
-            inter_arrival_time: {
-              distribution: "exponential",
-              params: { lambda: 1.0 }
-            },
-            job_types: {
-              milp: 0.3,
-              heuristic: 0.4,
-              ml: 0.2,
-              mixed: 0.1
+            job_generation: {
+              job_size: {
+                distribution: "lognormal",
+                params: { mean_log: 1.0, std_log: 0.8 }
+              },
+              job_duration: {
+                distribution: "gamma",
+                params: { alpha: 3.0, beta: 2.5 }
+              },
+              inter_arrival_time: {
+                distribution: "exponential",
+                params: { lambda: 3.0 }
+              },
+              job_types: {
+                milp: 0.3,
+                heuristic: 0.4,
+                ml: 0.2,
+                mixed: 0.1
+              }
             }
           }
-        }
-      };
+        };
 
-      await simulatorAPI.startSimulation(config);
+        await simulatorAPI.startSimulation(config);
+      }
+      
       fetchData(); // Immediately update data
     } catch (error) {
       setState(prev => ({
@@ -196,7 +267,14 @@ const SimulatorDashboard: React.FC = () => {
     
     try {
       await simulatorAPI.stopSimulation();
-      fetchData(); // Immediately update data
+      // Don't call fetchData() immediately after stopping - let the graphs preserve their data
+      // Instead, just update the simulation status without clearing accumulated data
+      const status = await simulatorAPI.getSimulationStatus();
+      setState(prev => ({
+        ...prev,
+        simulationStatus: status,
+        error: null,
+      }));
     } catch (error) {
       setState(prev => ({
         ...prev,
@@ -205,6 +283,11 @@ const SimulatorDashboard: React.FC = () => {
     } finally {
       setState(prev => ({ ...prev, loading: false }));
     }
+  };
+
+  const handleClearGraphData = () => {
+    // Use the context function to trigger graph data clearing
+    clearGraphData();
   };
 
   const handleResetSimulation = async () => {
@@ -309,6 +392,59 @@ const SimulatorDashboard: React.FC = () => {
           Simulation Control
         </Typography>
         
+        {/* Scenario Selection */}
+        <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            Scenario Configuration
+          </Typography>
+          
+          <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
+            <FormControl sx={{ minWidth: 250 }}>
+              <InputLabel>Select Scenario</InputLabel>
+              <Select
+                value={state.selectedScenario || ''}
+                label="Select Scenario"
+                onChange={(e) => handleScenarioChange(e.target.value)}
+                disabled={state.loading || state.simulationStatus.running}
+              >
+                <MenuItem value="">
+                  <em>Default Configuration</em>
+                </MenuItem>
+                {state.scenarios.map((scenario) => (
+                  <MenuItem key={scenario.filename} value={scenario.filename}>
+                    <Box>
+                      <Typography variant="body2" fontWeight="bold">
+                        {scenario.name}
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary">
+                        {Math.round(scenario.duration / 60)}min, {scenario.workers} workers, {scenario.arrival_type}
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <Button
+              variant="contained"
+              color="info"
+              onClick={handleLoadScenario}
+              disabled={!state.selectedScenario || state.loading || state.simulationStatus.running}
+              startIcon={state.scenarioLoaded ? <Assessment /> : undefined}
+            >
+              {state.scenarioLoaded ? 'Scenario Loaded' : 'Load Scenario'}
+            </Button>
+
+            {state.selectedScenario && (
+              <Box sx={{ ml: 2 }}>
+                <Typography variant="caption" color="textSecondary">
+                  {state.scenarios.find(s => s.filename === state.selectedScenario)?.description || 'No description'}
+                </Typography>
+              </Box>
+            )}
+          </Stack>
+        </Paper>
+        
         {/* Primary Controls */}
         <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" sx={{ mb: 2 }}>
           <Button
@@ -317,8 +453,12 @@ const SimulatorDashboard: React.FC = () => {
             startIcon={<PlayArrow />}
             onClick={handleStartSimulation}
             disabled={state.loading || state.simulationStatus.running}
+            size="large"
           >
-            Start Simulation
+            {state.scenarioLoaded 
+              ? `Start: ${state.scenarios.find(s => s.filename === state.selectedScenario)?.name || 'Loaded Scenario'}`
+              : 'Start Simulation (Default)'
+            }
           </Button>
           
           <Button
@@ -338,6 +478,17 @@ const SimulatorDashboard: React.FC = () => {
             disabled={state.loading || state.simulationStatus.running}
           >
             Reset
+          </Button>
+
+          <Button
+            variant="outlined"
+            color="warning"
+            startIcon={<Clear />}
+            onClick={handleClearGraphData}
+            disabled={state.loading}
+            sx={{ ml: 1 }}
+          >
+            Clear Graph Data
           </Button>
 
           <Divider orientation="vertical" flexItem />
@@ -457,6 +608,15 @@ const SimulatorDashboard: React.FC = () => {
             icon={wsConnected ? <Wifi /> : <WifiOff />}
             size="small"
           />
+
+          {state.scenarioLoaded && state.selectedScenario && (
+            <Chip
+              label={`Scenario: ${state.scenarios.find(s => s.filename === state.selectedScenario)?.name || 'Unknown'}`}
+              color="info"
+              icon={<Assessment />}
+              size="small"
+            />
+          )}
 
           {lastUpdate && (
             <Typography variant="caption" color="textSecondary">

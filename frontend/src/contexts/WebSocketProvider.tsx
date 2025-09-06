@@ -14,6 +14,8 @@ interface WebSocketContextType {
   isConnected: boolean;
   latestData: SocketData | null;
   connectionError: string | null;
+  clearGraphData: () => void;
+  clearGraphDataTrigger: number | null;
 }
 
 const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);
@@ -35,6 +37,11 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
   const [isConnected, setIsConnected] = useState(false);
   const [latestData, setLatestData] = useState<SocketData | null>(null);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [clearGraphDataTrigger, setClearGraphDataTrigger] = useState<number | null>(null);
+
+  const clearGraphData = () => {
+    setClearGraphDataTrigger(Date.now());
+  };
 
   useEffect(() => {
     const SOCKET_SERVER_URL = process.env.REACT_APP_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
@@ -119,6 +126,8 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
     isConnected,
     latestData,
     connectionError,
+    clearGraphData,
+    clearGraphDataTrigger,
   };
 
   return (

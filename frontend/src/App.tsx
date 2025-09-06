@@ -7,11 +7,16 @@ import {
   Toolbar,
   Alert,
   Snackbar,
+  Tabs,
+  Tab,
+  Paper,
 } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import { Dashboard, ShowChart } from '@mui/icons-material';
 import { simulatorAPI } from './api/simulatorAPI';
 import SimulatorDashboard from './components/SimulatorDashboard';
+import RealTimeGraphs from './components/RealTimeGraphs';
 import { WebSocketProvider } from './contexts/WebSocketProvider';
 
 // Create a dark theme
@@ -30,6 +35,7 @@ const theme = createTheme({
 function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [tabValue, setTabValue] = useState(0);
 
   useEffect(() => {
     const checkConnection = async () => {
@@ -52,6 +58,10 @@ function App() {
 
     return () => clearInterval(interval);
   }, []);
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -77,7 +87,33 @@ function App() {
           
           <Container maxWidth="xl" sx={{ mt: 3 }}>
             {isConnected ? (
-              <SimulatorDashboard />
+              <Box>
+                {/* Tab Navigation */}
+                <Paper sx={{ mb: 3 }}>
+                  <Tabs 
+                    value={tabValue} 
+                    onChange={handleTabChange}
+                    variant="fullWidth"
+                    indicatorColor="primary"
+                    textColor="primary"
+                  >
+                    <Tab 
+                      icon={<Dashboard />} 
+                      label="Dashboard" 
+                      iconPosition="start"
+                    />
+                    <Tab 
+                      icon={<ShowChart />} 
+                      label="Analytics Graphs" 
+                      iconPosition="start"
+                    />
+                  </Tabs>
+                </Paper>
+
+                {/* Tab Content */}
+                {tabValue === 0 && <SimulatorDashboard />}
+                {tabValue === 1 && <RealTimeGraphs maxDataPoints={5000} />}
+              </Box>
             ) : (
               <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
                 <Alert severity="error">

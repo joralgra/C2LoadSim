@@ -424,3 +424,4 @@ frontend/node_modules
 logs/jobs_log.csv
 logs/simulation_log.csv
 logs/simulation_log.json
+frontend/node_modules/*
