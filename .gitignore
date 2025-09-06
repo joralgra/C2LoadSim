@@ -419,3 +419,5 @@ analysis_results_*/
 
 backend/__pycache__
 config/__pycache__
+
+frontend/node_modules
