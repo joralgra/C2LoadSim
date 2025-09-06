@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: c2loadsim-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - c2loadsim-network
+
+  # Optional: Redis Commander (Web UI for Redis)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: c2loadsim-redis-ui
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=redis:redis:6379
+    depends_on:
+      - redis
+    networks:
+      - c2loadsim-network
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  c2loadsim-network:
+    driver: bridge
