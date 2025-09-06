@@ -1,16 +1,26 @@
 {
-  "scenarioName": "Mixed",
-  "duration": 14400,
-  "seed": 45,
+  "scenarioName": "Mixed Daily Simulation (Sustainable)",
+  "description": "Escenario mixto con NHPP \u00fanico y mezcla de tama\u00f1os - Adjusted for sustainable queue operation",
+  "termination": {
+    "mode": "data_points",
+    "max_data_points": 1440,
+    "log_interval": 60.0
+  },
+  "seed": 55,
   "arrival": {
     "type": "nhpp",
-    "lambdaFunction": "3 + 2*cos(t/1800)"
+    "params": {
+      "base_rate": 0.025,
+      "peak_factor": 0.7,
+      "period": 28800.0,
+      "phase": 3.14
+    }
   },
   "jobSize": {
     "type": "mixture",
     "components": [
       {
-        "weight": 0.4,
+        "weight": 0.5,
         "type": "gamma",
         "parameters": {
           "k": 8,
@@ -18,7 +28,7 @@
         }
       },
       {
-        "weight": 0.4,
+        "weight": 0.3,
         "type": "normal",
         "parameters": {
           "mu": 5,
@@ -36,21 +46,10 @@
     ]
   },
   "workers": {
-    "count": 8,
+    "count": 2,
     "speedDistribution": {
-      "type": "gamma",
-      "k": 2,
-      "theta": 0.5
-    },
-    "cpuUsage": {
-      "type": "normal",
-      "mu": 0.5,
-      "sigma": 0.1
-    },
-    "memoryUsage": {
-      "type": "normal",
-      "mu": 256,
-      "sigma": 64
+      "type": "constant",
+      "value": 0.6
     }
   }
 }

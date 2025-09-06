@@ -1,10 +1,20 @@
 {
-  "scenarioName": "Heuristics",
-  "duration": 3600,
-  "seed": 43,
+  "scenarioName": "Heuristics Daily Simulation (Sustainable)",
+  "description": "Escenario Heur\u00edsticos con NHPP r\u00e1pido, trabajos peque\u00f1os y frecuentes - Adjusted for sustainable queue operation",
+  "termination": {
+    "mode": "data_points",
+    "max_data_points": 1440,
+    "log_interval": 60.0
+  },
+  "seed": 53,
   "arrival": {
-    "type": "poisson",
-    "lambda": 10
+    "type": "nhpp",
+    "params": {
+      "base_rate": 0.14,
+      "peak_factor": 0.8,
+      "period": 7200.0,
+      "phase": 0
+    }
   },
   "jobSize": {
     "type": "normal",
@@ -14,21 +24,10 @@
     }
   },
   "workers": {
-    "count": 10,
+    "count": 2,
     "speedDistribution": {
-      "type": "normal",
-      "mu": 0.9,
-      "sigma": 0.05
-    },
-    "cpuUsage": {
-      "type": "normal",
-      "mu": 0.3,
-      "sigma": 0.05
-    },
-    "memoryUsage": {
-      "type": "normal",
-      "mu": 128,
-      "sigma": 32
+      "type": "constant",
+      "value": 0.9
     }
   }
 }

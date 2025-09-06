@@ -1,34 +1,33 @@
 {
-  "scenarioName": "MILP",
-  "duration": 7200,
-  "seed": 42,
+  "scenarioName": "MILP Daily Simulation (Sustainable)",
+  "description": "Escenario MILP con NHPP suave, trabajos grandes y pocos picos - Adjusted for sustainable queue operation",
+  "termination": {
+    "mode": "data_points",
+    "max_data_points": 1440,
+    "log_interval": 60.0
+  },
+  "seed": 52,
   "arrival": {
-    "type": "poisson",
-    "lambda": 2
+    "type": "nhpp",
+    "params": {
+      "base_rate": 0.003,
+      "peak_factor": 0.4,
+      "period": 86400.0,
+      "phase": 0
+    }
   },
   "jobSize": {
     "type": "gamma",
     "parameters": {
-      "k": 10,
-      "theta": 5
+      "k": 12,
+      "theta": 6
     }
   },
   "workers": {
-    "count": 3,
+    "count": 2,
     "speedDistribution": {
-      "type": "normal",
-      "mu": 0.2,
-      "sigma": 0.05
-    },
-    "cpuUsage": {
-      "type": "normal",
-      "mu": 0.75,
-      "sigma": 0.05
-    },
-    "memoryUsage": {
-      "type": "normal",
-      "mu": 1024,
-      "sigma": 256
+      "type": "constant",
+      "value": 0.2
     }
   }
 }
